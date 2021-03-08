@@ -111,8 +111,10 @@ shp_raw %>% head()
 tmap_mode("view")
 
 tm_shape(shp_raw) + 
-  tm_borders() + 
-  tm_shape(df_raw)
+  tm_borders() 
+# add geometry to df_raw 
+# so that we can do a geom_sf() + on top of geom_point()
+# 
 ```
 
 
