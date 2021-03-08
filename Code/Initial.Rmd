@@ -14,16 +14,25 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA,
 library(tidyverse)
 library(magrittr)
 library(lubridate)
+library(sf)
+library(tmap)
 
-df_raw <- read_csv("Data/crime.csv")
-trend_raw <- read_csv("Data/googletrend.csv")
+df_raw <- read_csv("../Data/crime.csv")
+trend_raw <- read_csv("../Data/googletrend.csv")
+shp_raw <- sf::st_read("../Data/local-area-boundary.shp")
+
 ```
 
-# Inital Peak
+# Initial Peak
+
 ```{r}
 df_raw %>% sample_n(10)
 ```
 
+| Col1 | Col2 |
+|------|------|
+|      |      |
+|      |      |
 
 ```{r}
 # the hell is this?
@@ -31,21 +40,28 @@ trend_raw %>%
   sample_n(10)
 ```
 
+
+## NA counts
+
 ```{r}
-df_raw %>% is.na() %>% 
+df_raw %>% 
+  sample_n(1000) %>% 
+  is.na() %>% 
   table()
-
-# shoooi
 ```
+True NA count
+
+| FALSE | TRUE |
+|-------|------|
+|6202463|165361|
+
 
 ```{r}
-df_raw %<>% 
-  rename_all(tolower)
 
 df_raw %>% 
   transmute(
-    type = as.factor(type)
-  )  %>% pull(type) %>% 
+    TYPE = as.factor(TYPE)
+  )  %>% pull(TYPE) %>% 
   fct_infreq() %>% 
   fct_rev() %>% 
   fct_count() %>% 
@@ -56,7 +72,54 @@ df_raw %>%
 
 TODO:
 
-  + Class imbalance
-  + `library(sf)`, `html widget` to visualize the geological aspect
-  
+-   Class imbalance
+-   `library(sf)`, `html widget` to visualize the geological aspect
+
+# Dataset fix
+
+```{r}
+df_raw %<>% 
+  rename_all(tolower)
+```
+
+
+
+```{r}
+df_raw %>% 
+  mutate(
+    type = as.factor(type) %>% fct_infreq()
+  ) %>% 
+  filter(type != "Theft from Vehicle" & type != "Homicide") -> new
+
+new$type %>% fct_drop() %>% 
+  fct_count()
+```
+
+```{r}
+levels(new$type)[c(6,8)] = "theft of something"
+levels(new$type)[c(8,9)] = "vehicle collision"
+
+```
+
+# shape file
+
+```{r}
+shp_raw %>% head()
+```
+
+```{r}
+tmap_mode("view")
+
+tm_shape(shp_raw) + 
+  tm_borders() + 
+  tm_shape(df_raw)
+```
+
+
+```{r, fig.width= 7, fig.height=8}
+new %>% sample_n(100000) %>% 
+  filter(latitude > 49.1549 & longitude < -123 & latitude < 49.4) %>% 
+  ggplot(aes(x = longitude, y = latitude)) + 
+  geom_point(aes(col = type), show.legend = F)
+```
 
