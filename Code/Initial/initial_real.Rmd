@@ -10,18 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-
-
-setwd("~/crime/")
-
 library(tidyverse)
+library(magrittr)
+here::here()
+df <- read_csv(here::here("Data", "NYPD_Complaint_Data.csv"))
+df_des <- read_csv(here::here("Data","NYPD_Incident_Level_Data_Column_Descriptions.csv"))
 
-df <- read_csv("NYPD_Complaint_Data_Current_YTD (1).csv")
-df_des <- read_csv("NYPD_Incident_Level_Data_Column_Descriptions.csv")
-
-df %>% head() %>% names(
-  
-)
+df %>% head() %>% names()
 
 ```
 
@@ -46,8 +41,8 @@ df2 %>%
 
 
 ```{r}
-df2 %>% 
-  select(OFNS_DESC) %>% 
+df2 %<>% 
+  # select(OFNS_DESC) %>% 
   mutate(
     collpsed = OFNS_DESC %>%  fct_collapse(
       ADMINISTRATIVE_CODE = c("ADMINISTRATIVE CODE", "ADMINISTRATIVE CODES"),
@@ -62,19 +57,41 @@ df2 %>%
       Offences = c("OFF. AGNST PUB ORD SENSBLTY &", "OFFENSES AGAINST PUBLIC ADMINI", "OFFENSES AGAINST THE PERSON"),
       
     )
-  ) %>% select(collpsed) %>% 
+  ) %>% # select(collpsed) %>% 
   mutate(
     collpsed = collpsed %>% fct_collapse(
       ROBBERY = c("ROBBERY", "Burglary"), 
       Penal_law = c("MISCELLANEOUS PENAL LAW", "state_laws", "INTOXICATED & IMPAIRED DRIVING", "CRIMINAL TRESPASS", "UNAUTHORIZED USE OF A VEHICLE"), 
       DANGEROUS_DRUG_weapons = c("DANGEROUS DRUGS", "DANGEROUS WEAPONS")
     )
-  ) %>% 
-  group_by(collpsed) %>% 
-  summarise(count = n()) %>% filter(count > 800) %>% 
-  arrange(desc(count)) %>% View()
+  )#  %>% 
+  # group_by(collpsed) %>% 
+  # summarise(count = n()) %>% filter(count > 800) %>% 
+  # arrange(desc(count)) %>% View()
 ```
 
+TODO 
 
+  + CMPLNT_FR_DT  = Date of occurrence --> day of the week 
+  + CMPLNT_FR_TM  = Time of occurence --> hms -> h
+  + KY_CD = remove
+  + OFNS_Desc = response --> filter by frequn > 800
+  + JURIS_DEsc = Police station --> check filter above and then something
+  + ADDR_PCT_CD = asIs
+  + LOC_OF_OCCUR = asIS
+  + PREM_TYP_DESC = Harshani balanawalu eka
+  + PARKS_NM = boolean
+  + HADEVELOP = boolean
+  + lat/long = spatial (EPSG: coordinate system)
+ 
+  + NewYork spatial dataset
+
+```{r}
+df2 %>% head()
+```
+
+```{r}
+df2 %>% select(PREM_TYP_DESC) %>% table()
+```
 
 
